@@ -1,4 +1,6 @@
-pub mod request;
+mod client;
+mod request;
+mod response;
 
 use request::PropertyMap;
 
@@ -30,7 +32,13 @@ fn main() {
         .local_properties(local_kv)
         .test_properties(test_kv)
         .header("AUTHENTICATION".to_owned(), "Your mum".to_owned())
+        .verb(request::Verb::GET)
         .build();
 
-    println!("Replaced URL [{}]", req.replaced_url());
+    let resp = client::execute(req);
+    if resp.is_err() {
+        panic!("Failed to make request: {}", resp.err().unwrap());
+    }
+
+    println!("Got response {:?}", resp.unwrap());
 }
