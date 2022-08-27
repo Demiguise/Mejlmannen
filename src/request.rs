@@ -18,7 +18,7 @@ pub enum Verb {
 
 #[derive(Debug)]
 pub struct Request {
-    url: String,
+    uri: String,
     key_values: PropertyMap,
     headers: PropertyMap,
     body: String,
@@ -26,7 +26,7 @@ pub struct Request {
 }
 
 pub struct RequestBuilder {
-    url: String,
+    uri: String,
     global_properties: PropertyMap,
     local_properties: PropertyMap,
     test_properties: PropertyMap,
@@ -38,7 +38,7 @@ pub struct RequestBuilder {
 impl RequestBuilder {
     pub fn new() -> Self {
         RequestBuilder {
-            url: "".to_owned(),
+            uri: "".to_owned(),
             global_properties: PropertyMap::new(),
             local_properties: PropertyMap::new(),
             test_properties: PropertyMap::new(),
@@ -48,8 +48,8 @@ impl RequestBuilder {
         }
     }
 
-    pub fn url(mut self, url: String) -> RequestBuilder {
-        self.url = url;
+    pub fn uri(mut self, uri: String) -> RequestBuilder {
+        self.uri = uri;
         self
     }
 
@@ -93,7 +93,7 @@ impl RequestBuilder {
         merged_properties.extend(self.local_properties);
         merged_properties.extend(self.test_properties);
         Request {
-            url: self.url,
+            uri: self.uri,
             key_values: merged_properties,
             headers: self.headers,
             body: self.body,
@@ -103,8 +103,8 @@ impl RequestBuilder {
 }
 
 impl Request {
-    pub fn url(&self) -> &String {
-        &self.url
+    pub fn uri(&self) -> &String {
+        &self.uri
     }
     pub fn headers(&self) -> &PropertyMap {
         &self.headers
@@ -130,8 +130,8 @@ impl Request {
     }
 
     // TODO: Replace these with in pre-prepared versions?
-    pub fn replaced_url(&self) -> String {
-        self.replace_text(&self.url)
+    pub fn replaced_uri(&self) -> String {
+        self.replace_text(&self.uri)
     }
 
     pub fn replaced_headers(&self) -> PropertyMap {
@@ -152,7 +152,7 @@ mod test {
     #[test]
     fn new_builder_is_empty() {
         let builder = RequestBuilder::new();
-        assert!(builder.url.is_empty());
+        assert!(builder.uri.is_empty());
         assert!(builder.global_properties.is_empty());
         assert!(builder.local_properties.is_empty());
         assert!(builder.test_properties.is_empty());
@@ -194,53 +194,53 @@ mod test {
     }
 
     #[test]
-    fn url_replaced() {
+    fn uri_replaced() {
         let mut global = PropertyMap::new();
         global.insert("some_key".to_owned(), "some_value".to_owned());
 
         let request = RequestBuilder::new()
-            .url("URL/{some_key}/URL".to_owned())
+            .uri("URI/{some_key}/URI".to_owned())
             .global_properties(global)
             .build();
 
-        assert_eq!(request.replaced_url(), "URL/some_value/URL");
+        assert_eq!(request.replaced_uri(), "URI/some_value/URI");
     }
 
     #[test]
-    fn url_replaced_escaped_braces() {
+    fn uri_replaced_escaped_braces() {
         // It should escape the key even if it's available in the property maps
         let mut global = PropertyMap::new();
         global.insert("some_key".to_owned(), "some_value".to_owned());
 
         let request = RequestBuilder::new()
-            .url("URL/{{some_key}}/URL".to_owned())
+            .uri("URI/{{some_key}}/URI".to_owned())
             .global_properties(global)
             .build();
 
-        assert_eq!(request.replaced_url(), "URL/{some_key}/URL");
+        assert_eq!(request.replaced_uri(), "URI/{some_key}/URI");
     }
 
     #[test]
-    fn url_replaced_empty_escaped_braces() {
-        let request = RequestBuilder::new().url("URL/{{}}/URL".to_owned()).build();
+    fn uri_replaced_empty_escaped_braces() {
+        let request = RequestBuilder::new().uri("URI/{{}}/URI".to_owned()).build();
 
-        assert_eq!(request.replaced_url(), "URL/{}/URL");
+        assert_eq!(request.replaced_uri(), "URI/{}/URI");
     }
 
     #[test]
-    fn url_replaced_unknown_key() {
+    fn uri_replaced_unknown_key() {
         let request = RequestBuilder::new()
-            .url("URL/{some_key}/URL".to_owned())
+            .uri("URI/{some_key}/URI".to_owned())
             .build();
 
-        assert_eq!(request.replaced_url(), "URL/{some_key}/URL");
+        assert_eq!(request.replaced_uri(), "URI/{some_key}/URI");
     }
 
     #[test]
-    fn url_replaced_empty_key() {
-        let request = RequestBuilder::new().url("URL/{}/URL".to_owned()).build();
+    fn uri_replaced_empty_key() {
+        let request = RequestBuilder::new().uri("URI/{}/URI".to_owned()).build();
 
-        assert_eq!(request.replaced_url(), "URL/{}/URL");
+        assert_eq!(request.replaced_uri(), "URI/{}/URI");
     }
 
     #[test]

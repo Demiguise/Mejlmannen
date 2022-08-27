@@ -24,10 +24,10 @@ fn main() {
     test_kv.insert("endpoint".to_owned(), "dothing".to_owned());
 
     // Some URL we want to hit
-    let url = "localhost:8043/api/{{version}}/{endpoint}/{not_found}".to_owned();
+    let uri = "localhost:8043/api/{{version}}/{endpoint}/{not_found}".to_owned();
 
     let req = request::RequestBuilder::new()
-        .url(url)
+        .uri(uri)
         .global_properties(global_kv)
         .local_properties(local_kv)
         .test_properties(test_kv)
