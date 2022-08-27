@@ -3,20 +3,25 @@ mod request;
 mod response;
 
 use request::PropertyMap;
+use serde::Deserialize;
+use std::fs;
+use std::path::PathBuf;
 
-#[tokio::main]
-async fn main() {
-    // Finally a set of per-test overrides or new values
-    let mut test_kv = PropertyMap::new();
-    test_kv.insert("endpoint".to_owned(), "ip".to_owned());
+#[derive(Deserialize, Debug)]
+struct Test {
+    name: String,
+    uri: String,
+    properties: PropertyMap,
+    headers: PropertyMap,
+}
 
-    // Some URL we want to hit
-    let uri = "http://httpbin.org/{endpoint}".to_owned();
+async fn execute_test(test: &Test) {
+    println!("Running [{}]", test.name);
 
     let req = request::RequestBuilder::new()
-        .uri(uri)
-        .test_properties(test_kv)
-        .header("AUTHENTICATION".to_owned(), "Your mum".to_owned())
+        .uri(test.uri.clone())
+        .test_properties(test.properties.clone())
+        .header_map(test.headers.clone())
         .verb(request::Verb::GET)
         .build();
 
@@ -30,4 +35,22 @@ async fn main() {
     let body = String::from_utf8(resp.body().clone());
 
     println!("Got response [{:?}]", body);
+}
+
+#[tokio::main]
+async fn main() {
+    let mut test_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
+    test_file.push("tests/data/tests.mejl");
+
+    if !test_file.exists() {
+        panic!("Can't find tests/data/tests.mejl");
+    }
+
+    let data = fs::read_to_string(test_file).expect("Unable to read file");
+
+    let json: Vec<Test> = serde_json::from_str(&data).expect("Somethi");
+
+    for test in json.iter() {
+        execute_test(test).await;
+    }
 }

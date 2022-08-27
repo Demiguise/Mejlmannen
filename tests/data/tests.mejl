@@ -1,0 +1,12 @@
+[
+  {
+    "name": "initial_test",
+    "uri": "http://httpbin.org/{endpoint}",
+    "properties": {
+      "endpoint": "ip"
+    },
+    "headers": {
+      "AUTHENTICATION": "your mum"
+    }
+  }
+]

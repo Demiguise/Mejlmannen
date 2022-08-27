@@ -11,3 +11,5 @@ regex = "1.6.0"
 anyhow = "1.0.62"
 hyper = { version = "0.14.20", features = ["full"] }
 tokio = { version = "1", features = ["full"] }
+serde_json = "1.0.85"
+serde = { version = "1.0", features = ["derive"] }
