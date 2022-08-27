@@ -9,3 +9,5 @@ edition = "2021"
 lazy_static = "1.4.0"
 regex = "1.6.0"
 anyhow = "1.0.62"
+hyper = { version = "0.14.20", features = ["full"] }
+tokio = { version = "1", features = ["full"] }
