@@ -2,8 +2,6 @@ mod client;
 mod request;
 mod response;
 
-use std::borrow::Borrow;
-
 use request::PropertyMap;
 
 #[tokio::main]
