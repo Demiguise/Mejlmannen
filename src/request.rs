@@ -8,12 +8,21 @@ lazy_static! {
         .expect("Failed to create regex for Request data replacement");
 }
 
+// TODO: Expand
+#[derive(Debug)]
+pub enum Verb {
+    GET,
+    POST,
+    DELETE,
+}
+
 #[derive(Debug)]
 pub struct Request {
     url: String,
     key_values: PropertyMap,
     headers: PropertyMap,
     body: String,
+    verb: Verb,
 }
 
 pub struct RequestBuilder {
@@ -23,6 +32,7 @@ pub struct RequestBuilder {
     test_properties: PropertyMap,
     headers: PropertyMap,
     body: String,
+    verb: Verb,
 }
 
 impl RequestBuilder {
@@ -34,6 +44,7 @@ impl RequestBuilder {
             test_properties: PropertyMap::new(),
             headers: PropertyMap::new(),
             body: "".to_owned(),
+            verb: Verb::GET,
         }
     }
 
@@ -72,6 +83,11 @@ impl RequestBuilder {
         self
     }
 
+    pub fn verb(mut self, verb: Verb) -> RequestBuilder {
+        self.verb = verb;
+        self
+    }
+
     pub fn build(self) -> Request {
         let mut merged_properties = self.global_properties.clone();
         merged_properties.extend(self.local_properties);
@@ -81,6 +97,7 @@ impl RequestBuilder {
             key_values: merged_properties,
             headers: self.headers,
             body: self.body,
+            verb: self.verb
         }
     }
 }
