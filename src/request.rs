@@ -21,7 +21,7 @@ pub struct Request {
     uri: String,
     key_values: PropertyMap,
     headers: PropertyMap,
-    body: String,
+    body: Vec<u8>,
     verb: Verb,
 }
 
@@ -31,7 +31,7 @@ pub struct RequestBuilder {
     local_properties: PropertyMap,
     test_properties: PropertyMap,
     headers: PropertyMap,
-    body: String,
+    body: Vec<u8>,
     verb: Verb,
 }
 
@@ -43,7 +43,7 @@ impl RequestBuilder {
             local_properties: PropertyMap::new(),
             test_properties: PropertyMap::new(),
             headers: PropertyMap::new(),
-            body: "".to_owned(),
+            body: Vec::new(),
             verb: Verb::GET,
         }
     }
@@ -78,7 +78,7 @@ impl RequestBuilder {
         self
     }
 
-    pub fn body(mut self, body: String) -> RequestBuilder {
+    pub fn body(mut self, body: Vec<u8>) -> RequestBuilder {
         self.body = body;
         self
     }
@@ -109,7 +109,7 @@ impl Request {
     pub fn headers(&self) -> &PropertyMap {
         &self.headers
     }
-    pub fn body(&self) -> &String {
+    pub fn body(&self) -> &Vec<u8> {
         &self.body
     }
     pub fn verb(&self) -> Verb {

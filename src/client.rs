@@ -39,11 +39,10 @@ mod response_converter {
     pub async fn convert(resp: Response<Body>) -> Result<response::Response> {
         let status_code = resp.status();
         let buf = hyper::body::to_bytes(resp).await.expect("Something");
-        let body = String::from_utf8(buf.to_vec()).expect("Something else");
 
         let converted = response::ResponseBuilder::new()
             .status(status_code.as_u16())
-            .body(body)
+            .body(buf.to_vec())
             .build();
 
         Ok(converted)

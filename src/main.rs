@@ -2,6 +2,8 @@ mod client;
 mod request;
 mod response;
 
+use std::borrow::Borrow;
+
 use request::PropertyMap;
 
 #[tokio::main]
@@ -25,5 +27,9 @@ async fn main() {
         panic!("Failed to make request: {}", resp.err().unwrap());
     }
 
-    println!("Got response {:?}", resp.unwrap());
+    let resp = resp.unwrap();
+
+    let body = String::from_utf8(resp.body().clone());
+
+    println!("Got response [{:?}]", body);
 }
