@@ -9,7 +9,7 @@ lazy_static! {
 }
 
 // TODO: Expand
-#[derive(Debug)]
+#[derive(Debug, Clone, Copy)]
 pub enum Verb {
     GET,
     POST,
@@ -111,6 +111,9 @@ impl Request {
     }
     pub fn body(&self) -> &String {
         &self.body
+    }
+    pub fn verb(&self) -> Verb {
+        self.verb
     }
 
     fn replace_text(&self, text: &String) -> String {
