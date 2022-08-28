@@ -2,8 +2,10 @@ mod client;
 mod request;
 mod response;
 
+use anyhow::{Context, Result};
 use request::PropertyMap;
 use serde::Deserialize;
+use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
 
@@ -14,6 +16,8 @@ struct Test {
     properties: PropertyMap,
     headers: PropertyMap,
 }
+
+type TestMap = HashMap<String, Vec<Test>>;
 
 async fn execute_test(test: &Test) {
     println!("Running [{}]", test.name);
@@ -37,20 +41,55 @@ async fn execute_test(test: &Test) {
     println!("Got response [{:?}]", body);
 }
 
-#[tokio::main]
-async fn main() {
-    let mut test_file = PathBuf::from(env!("CARGO_MANIFEST_DIR"));
-    test_file.push("tests/data/tests.mejl");
+fn load_directory(root_dir: &PathBuf, current_dir: &PathBuf, map: &mut TestMap) -> Result<()> {
+    let contents = current_dir.read_dir()?;
+    for item in contents {
+        let path = item
+            .with_context(|| format!("Failed to read file in {}", current_dir.display()))?
+            .path();
 
-    if !test_file.exists() {
-        panic!("Can't find tests/data/tests.mejl");
+        if path.is_dir() {
+            // Recurse down that file path
+            load_directory(root_dir, &path, map)?;
+            continue;
+        }
+
+        // Get the path we're currently looking at at, without the root_dir attached
+        // At the same time, convert it to a string
+        let test_path = current_dir
+            .strip_prefix(root_dir)
+            .with_context(|| "Failed to get test path")?
+            .to_owned()
+            .into_os_string()
+            .into_string()
+            .expect("Failed to create test_path");
+
+        let data = fs::read_to_string(&path)
+            .with_context(|| format!("Failed to read data from {}", path.display()))?;
+        match serde_json::from_str(&data) {
+            Ok(json) => {
+                map.insert(test_path, json);
+            }
+            Err(e) => {
+                println!("Failed to parse JSON from {} [{}]", path.display(), e);
+            }
+        }
     }
 
-    let data = fs::read_to_string(test_file).expect("Unable to read file");
+    Ok(())
+}
 
-    let json: Vec<Test> = serde_json::from_str(&data).expect("Somethi");
+#[tokio::main]
+async fn main() {
+    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let mut tests = HashMap::new();
 
-    for test in json.iter() {
-        execute_test(test).await;
+    load_directory(&test_dir, &test_dir, &mut tests).expect("Failed to load paths from directory");
+
+    for (path, tests) in tests.iter() {
+        println!("Running tests from {}", path);
+        for test in tests.iter() {
+            execute_test(test).await;
+        }
     }
 }
