@@ -19,7 +19,7 @@ pub enum Verb {
 #[derive(Debug)]
 pub struct Request {
     uri: String,
-    key_values: PropertyMap,
+    properties: PropertyMap,
     headers: PropertyMap,
     body: Vec<u8>,
     verb: Verb,
@@ -94,7 +94,7 @@ impl RequestBuilder {
         merged_properties.extend(self.test_properties);
         Request {
             uri: self.uri,
-            key_values: merged_properties,
+            properties: merged_properties,
             headers: self.headers,
             body: self.body,
             verb: self.verb
@@ -123,7 +123,7 @@ impl Request {
                 caps[0][1..caps[0].len() - 1].to_owned()
             } else {
                 // Normal replacement of a variable
-                match self.key_values.get(&caps[1]) {
+                match self.properties.get(&caps[1]) {
                     Some(value) => value.clone(),
                     None => caps[0].to_owned(), // Just return the matched string instead
                 }
@@ -183,15 +183,15 @@ mod test {
             .build();
 
         assert_eq!(
-            request.key_values.get("Global_Key"),
+            request.properties.get("Global_Key"),
             Some(&"Global Value".to_owned())
         );
         assert_eq!(
-            request.key_values.get("Local_Key"),
+            request.properties.get("Local_Key"),
             Some(&"Local Value".to_owned())
         );
         assert_eq!(
-            request.key_values.get("Test_Key"),
+            request.properties.get("Test_Key"),
             Some(&"Test Value".to_owned())
         );
     }
