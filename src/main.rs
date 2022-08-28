@@ -54,6 +54,12 @@ fn load_directory(root_dir: &PathBuf, current_dir: &PathBuf, map: &mut TestMap) 
             continue;
         }
 
+        let ext = path.extension();
+        if ext.is_some() && ext.unwrap() == "mejl" {
+            // Ignore mejl configuration files
+            continue;
+        }
+
         // Get the path we're currently looking at at, without the root_dir attached
         // At the same time, convert it to a string
         let test_path = current_dir
