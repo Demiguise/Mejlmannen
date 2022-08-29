@@ -23,6 +23,7 @@ pub struct Request {
     headers: StringMap,
     body: Vec<u8>,
     verb: Verb,
+    extract: StringMap,
 }
 
 pub struct RequestBuilder {
@@ -33,18 +34,20 @@ pub struct RequestBuilder {
     headers: StringMap,
     body: Vec<u8>,
     verb: Verb,
+    extract: StringMap,
 }
 
 impl RequestBuilder {
     pub fn new() -> Self {
         RequestBuilder {
-            uri: "".to_owned(),
+            uri: String::new(),
             global_properties: StringMap::new(),
             local_properties: StringMap::new(),
             test_properties: StringMap::new(),
             headers: StringMap::new(),
             body: Vec::new(),
             verb: Verb::GET,
+            extract: StringMap::new(),
         }
     }
 
@@ -88,6 +91,11 @@ impl RequestBuilder {
         self
     }
 
+    pub fn extract_map(mut self, extract: StringMap) -> RequestBuilder {
+        self.extract = extract;
+        self
+    }
+
     pub fn build(self) -> Request {
         let mut merged_properties = self.global_properties.clone();
         merged_properties.extend(self.local_properties);
@@ -97,7 +105,8 @@ impl RequestBuilder {
             properties: merged_properties,
             headers: self.headers,
             body: self.body,
-            verb: self.verb
+            verb: self.verb,
+            extract: self.extract,
         }
     }
 }
@@ -114,6 +123,9 @@ impl Request {
     }
     pub fn verb(&self) -> Verb {
         self.verb
+    }
+    pub fn extract(&self) -> &StringMap {
+        &self.extract
     }
 
     fn replace_text(&self, text: &String) -> String {
