@@ -1,0 +1,26 @@
+{
+  "name": "collection name",
+  "requests": [
+    {
+      "uri": "http://httpbin.org/{endpoint}",
+      "properties": {
+        "endpoint": "ip"
+      },
+      "headers": {
+      },
+      "extract": {
+        "extracted_param" : "json:origin",
+        "AUTH_VALUE" : "header:AUTHENTICATION_BEARER"
+      }
+    },
+    {
+      "uri": "http://httpbin.org/{extracted_param}",
+      "properties": {
+        "endpoint": "ip"
+      },
+      "headers": {
+        "AUTHENTICATION": "{AUTH_VALUE}"
+      }
+    }
+  ]
+}
