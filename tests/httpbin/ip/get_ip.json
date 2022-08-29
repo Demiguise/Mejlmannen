@@ -6,8 +6,7 @@
       "properties": {
         "endpoint": "ip"
       },
-      "headers": {
-      },
+      "verb": "GET",
       "extract": {
         "extracted_param" : "json:origin",
         "AUTH_VALUE" : "header:AUTHENTICATION_BEARER"
@@ -20,7 +19,8 @@
       },
       "headers": {
         "AUTHENTICATION": "{AUTH_VALUE}"
-      }
+      },
+      "verb": "GET"
     }
   ]
 }
