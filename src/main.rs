@@ -1,4 +1,5 @@
 mod client;
+mod extractor;
 mod request;
 mod response;
 
@@ -28,6 +29,16 @@ async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
     if resp.status() != 200 {
         println!("Request failed with code {}", resp.status());
         return;
+    }
+
+    match extractor::extract(request.extract(), &resp) {
+        Ok(props) => {
+            cached_properties.extend(props);
+        }
+        Err(e) => {
+            println!("Failed to extract properties: {}", e);
+            return;
+        }
     }
 
     let body = String::from_utf8(resp.body().clone());

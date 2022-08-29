@@ -1,13 +1,11 @@
-use request::{Result, PropertyMap};
-use anyhow::Result;
+use crate::{request::StringMap, response::Response};
+use anyhow::{anyhow, Result};
 
-pub fn extract(request: Request, body: Vec<u8>) -> Result<PropertyMap> {
-  let mut map = PropertyMap::new();
+pub fn extract(to_extract: &StringMap, response: &Response) -> Result<StringMap> {
+    let mut map = StringMap::new();
 
-  Ok(map)
+    Err(anyhow!("NYI"))
 }
 
-#[configuration(test)]
-mod test {
-
-}
+#[cfg(test)]
+mod test {}
