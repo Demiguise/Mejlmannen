@@ -1,5 +1,6 @@
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::Deserialize;
 
 pub type StringMap = std::collections::HashMap<String, String>;
 
@@ -9,20 +10,24 @@ lazy_static! {
 }
 
 // TODO: Expand
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Deserialize)]
 pub enum Verb {
     GET,
     POST,
     DELETE,
 }
 
-#[derive(Debug)]
+#[derive(Debug, Deserialize)]
 pub struct Request {
     uri: String,
+    #[serde(default)]
     properties: StringMap,
+    #[serde(default)]
     headers: StringMap,
+    #[serde(default)]
     body: Vec<u8>,
     verb: Verb,
+    #[serde(default)]
     extract: StringMap,
 }
 
@@ -43,7 +48,7 @@ impl Request {
         &self.extract
     }
 
-    fn get_property(&self, name: &str, cached_properties: &StringMap) -> Option<&String> {
+    fn get_property<'a>(&'a self, name: &str, cached_properties: &'a StringMap) -> Option<&String> {
         match self.properties.get(name) {
             Some(value) => Some(value),
             None => match cached_properties.get(name) {

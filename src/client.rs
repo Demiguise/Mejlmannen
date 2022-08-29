@@ -1,4 +1,4 @@
-use crate::response;
+use crate::{request::StringMap, response};
 
 use anyhow::Result;
 
@@ -22,10 +22,13 @@ mod request_converter {
         }
     }
 
-    pub fn convert(req: request::Request) -> Result<Request<Body>> {
+    pub fn convert(
+        req: &request::Request,
+        cached_properties: &request::StringMap,
+    ) -> Result<Request<Body>> {
         Request::builder()
             .method(convert_verb(req.verb()))
-            .uri(req.replaced_uri())
+            .uri(req.replaced_uri(cached_properties))
             .body(Body::from(req.body().clone()))
             .with_context(|| "Failed?") // TODO: Better message
     }
@@ -49,8 +52,11 @@ mod response_converter {
     }
 }
 
-pub async fn execute(req: crate::request::Request) -> Result<response::Response> {
-    let converted = request_converter::convert(req)?;
+pub async fn execute(
+    req: &crate::request::Request,
+    cached_properties: &StringMap,
+) -> Result<response::Response> {
+    let converted = request_converter::convert(req, cached_properties)?;
 
     println!("Making request with: {:?}", converted);
     let client = Client::new();
