@@ -3,7 +3,7 @@ mod request;
 mod response;
 
 use anyhow::{Context, Result};
-use request::PropertyMap;
+use request::StringMap;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
@@ -13,8 +13,8 @@ use std::path::PathBuf;
 struct Test {
     name: String,
     uri: String,
-    properties: PropertyMap,
-    headers: PropertyMap,
+    properties: StringMap,
+    headers: StringMap,
 }
 
 type TestMap = HashMap<String, Vec<Test>>;

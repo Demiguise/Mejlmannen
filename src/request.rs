@@ -1,7 +1,7 @@
 use lazy_static::lazy_static;
 use regex::Regex;
 
-pub type PropertyMap = std::collections::HashMap<String, String>;
+pub type StringMap = std::collections::HashMap<String, String>;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(r"\{{1,2}(\w*)\}{1,2}")
@@ -19,18 +19,18 @@ pub enum Verb {
 #[derive(Debug)]
 pub struct Request {
     uri: String,
-    properties: PropertyMap,
-    headers: PropertyMap,
+    properties: StringMap,
+    headers: StringMap,
     body: Vec<u8>,
     verb: Verb,
 }
 
 pub struct RequestBuilder {
     uri: String,
-    global_properties: PropertyMap,
-    local_properties: PropertyMap,
-    test_properties: PropertyMap,
-    headers: PropertyMap,
+    global_properties: StringMap,
+    local_properties: StringMap,
+    test_properties: StringMap,
+    headers: StringMap,
     body: Vec<u8>,
     verb: Verb,
 }
@@ -39,10 +39,10 @@ impl RequestBuilder {
     pub fn new() -> Self {
         RequestBuilder {
             uri: "".to_owned(),
-            global_properties: PropertyMap::new(),
-            local_properties: PropertyMap::new(),
-            test_properties: PropertyMap::new(),
-            headers: PropertyMap::new(),
+            global_properties: StringMap::new(),
+            local_properties: StringMap::new(),
+            test_properties: StringMap::new(),
+            headers: StringMap::new(),
             body: Vec::new(),
             verb: Verb::GET,
         }
@@ -53,17 +53,17 @@ impl RequestBuilder {
         self
     }
 
-    pub fn global_properties(mut self, global: PropertyMap) -> RequestBuilder {
+    pub fn global_properties(mut self, global: StringMap) -> RequestBuilder {
         self.global_properties = global;
         self
     }
 
-    pub fn local_properties(mut self, local: PropertyMap) -> RequestBuilder {
+    pub fn local_properties(mut self, local: StringMap) -> RequestBuilder {
         self.local_properties = local;
         self
     }
 
-    pub fn test_properties(mut self, test: PropertyMap) -> RequestBuilder {
+    pub fn test_properties(mut self, test: StringMap) -> RequestBuilder {
         self.test_properties = test;
         self
     }
@@ -73,7 +73,7 @@ impl RequestBuilder {
         self
     }
 
-    pub fn header_map(mut self, headers: PropertyMap) -> RequestBuilder {
+    pub fn header_map(mut self, headers: StringMap) -> RequestBuilder {
         self.headers.extend(headers);
         self
     }
@@ -106,7 +106,7 @@ impl Request {
     pub fn uri(&self) -> &String {
         &self.uri
     }
-    pub fn headers(&self) -> &PropertyMap {
+    pub fn headers(&self) -> &StringMap {
         &self.headers
     }
     pub fn body(&self) -> &Vec<u8> {
@@ -137,8 +137,8 @@ impl Request {
         self.replace_text(&self.uri)
     }
 
-    pub fn replaced_headers(&self) -> PropertyMap {
-        let mut map = PropertyMap::new();
+    pub fn replaced_headers(&self) -> StringMap {
+        let mut map = StringMap::new();
         self.headers.iter().for_each(|(key, value)| {
             map.insert(key.clone(), self.replace_text(&value));
         });
@@ -149,7 +149,7 @@ impl Request {
 
 #[cfg(test)]
 mod test {
-    use super::PropertyMap;
+    use super::StringMap;
     use super::RequestBuilder;
 
     #[test]
@@ -164,16 +164,16 @@ mod test {
 
     #[test]
     fn properties_are_merged() {
-        let mut global = PropertyMap::new();
+        let mut global = StringMap::new();
         global.insert("Global_Key".to_owned(), "Global Value".to_owned());
         global.insert("Local_Key".to_owned(), "Global Value".to_owned());
         global.insert("Test_Key".to_owned(), "Global Value".to_owned());
 
-        let mut local = PropertyMap::new();
+        let mut local = StringMap::new();
         local.insert("Local_Key".to_owned(), "Local Value".to_owned());
         local.insert("Test_Key".to_owned(), "Local Value".to_owned());
 
-        let mut test = PropertyMap::new();
+        let mut test = StringMap::new();
         test.insert("Test_Key".to_owned(), "Test Value".to_owned());
 
         let request = RequestBuilder::new()
@@ -198,7 +198,7 @@ mod test {
 
     #[test]
     fn uri_replaced() {
-        let mut global = PropertyMap::new();
+        let mut global = StringMap::new();
         global.insert("some_key".to_owned(), "some_value".to_owned());
 
         let request = RequestBuilder::new()
@@ -212,7 +212,7 @@ mod test {
     #[test]
     fn uri_replaced_escaped_braces() {
         // It should escape the key even if it's available in the property maps
-        let mut global = PropertyMap::new();
+        let mut global = StringMap::new();
         global.insert("some_key".to_owned(), "some_value".to_owned());
 
         let request = RequestBuilder::new()
@@ -248,7 +248,7 @@ mod test {
 
     #[test]
     fn headers_replaced() {
-        let mut global = PropertyMap::new();
+        let mut global = StringMap::new();
         global.insert("some_key".to_owned(), "some_value".to_owned());
 
         let request = RequestBuilder::new()
