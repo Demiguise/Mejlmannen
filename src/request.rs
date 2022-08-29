@@ -19,14 +19,17 @@ pub enum Verb {
 
 #[derive(Debug, Deserialize)]
 pub struct Request {
+    // Require properties
     uri: String,
+    verb: Verb,
+
+    // Defaults make these "Optional"
     #[serde(default)]
     properties: StringMap,
     #[serde(default)]
     headers: StringMap,
     #[serde(default)]
     body: Vec<u8>,
-    verb: Verb,
     #[serde(default)]
     extract: StringMap,
 }
@@ -48,6 +51,10 @@ impl Request {
         &self.extract
     }
 
+    /*
+        Lifetime markers here as we need to say that cached_properties lives just as long,
+        or longer, than self.
+    */
     fn get_property<'a>(&'a self, name: &str, cached_properties: &'a StringMap) -> Option<&String> {
         match self.properties.get(name) {
             Some(value) => Some(value),
