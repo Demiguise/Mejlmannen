@@ -90,7 +90,7 @@ async fn main() {
 
     let mut cached_properties = StringMap::new();
     for (path, collection) in collections.iter() {
-        println!("Running tests from {}", path.display());
+        println!("Running tests for {}/{}", path.display(), collection.name);
         for req in collection.requests.iter() {
             execute_request(req, &mut cached_properties).await;
         }
