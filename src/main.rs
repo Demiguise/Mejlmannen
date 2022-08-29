@@ -25,6 +25,11 @@ async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
 
     let resp = resp.unwrap();
 
+    if resp.status() != 200 {
+        println!("Request failed with code {}", resp.status());
+        return;
+    }
+
     let body = String::from_utf8(resp.body().clone());
 
     println!("Got response [{:?}]", body);
@@ -80,7 +85,8 @@ async fn main() {
     let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
     let mut collections = HashMap::new();
 
-    load_directory(&test_dir, &test_dir, &mut collections).expect("Failed to load paths from directory");
+    load_directory(&test_dir, &test_dir, &mut collections)
+        .expect("Failed to load paths from directory");
 
     let mut cached_properties = StringMap::new();
     for (path, collection) in collections.iter() {
