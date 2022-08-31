@@ -1,5 +1,6 @@
 use crate::{request::StringMap, response::Response};
 use anyhow::{anyhow, Result};
+use serde_json::Value;
 
 #[derive(Debug)]
 enum ExtractorTypes {
@@ -20,10 +21,23 @@ fn get_type(extract: &String) -> (ExtractorTypes, &str) {
 mod json {
     use crate::response::Response;
     use anyhow::{anyhow, Result};
+    use serde_json::Value;
 
-    pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
+    pub fn extract(
+        extract_string: &str,
+        response: &Response,
+    ) -> Result<String> {
         println!("JSON Parsing [{}]", extract_string);
-        Err(anyhow!("NYI"))
+        let body = String::from_utf8(response.body().clone())?;
+        let v: Value = serde_json::from_str(&body.as_str())?;
+
+        match v.get(extract_string) {
+            Some(value) => Ok(value.to_string()),
+            None => Err(anyhow!(
+                "Couldn't find [{}] in response body",
+                extract_string
+            )),
+        }
     }
 }
 
@@ -50,6 +64,7 @@ pub fn extract(to_extract: &StringMap, response: &Response) -> Result<StringMap>
 
         match result {
             Ok(value) => {
+                println!("Extracted [{}={}] from response body", prop, value);
                 map.insert(prop.clone(), value);
             }
             Err(e) => {
