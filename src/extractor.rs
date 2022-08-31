@@ -8,7 +8,7 @@ enum ExtractorTypes {
     JSON,
 }
 
-fn extract_type(extract: &String) -> (ExtractorTypes, &str) {
+fn get_type(extract: &String) -> (ExtractorTypes, &str) {
     if extract.starts_with("json:") {
         return (ExtractorTypes::JSON, &extract[5..]);
     } else if extract.starts_with("header:") {
@@ -17,16 +17,48 @@ fn extract_type(extract: &String) -> (ExtractorTypes, &str) {
     return (ExtractorTypes::UNKNOWN, extract);
 }
 
+mod json {
+    use crate::response::Response;
+    use anyhow::{anyhow, Result};
+
+    pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
+        println!("JSON Parsing [{}]", extract_string);
+        Err(anyhow!("NYI"))
+    }
+}
+
+mod headers {
+    use crate::response::Response;
+    use anyhow::{anyhow, Result};
+
+    pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
+        println!("Header Parsing [{}]", extract_string);
+        Err(anyhow!("NYI"))
+    }
+}
+
 pub fn extract(to_extract: &StringMap, response: &Response) -> Result<StringMap> {
     let mut map = StringMap::new();
 
     for (prop, extract) in to_extract {
-        let (extract_type, view) = extract_type(extract);
+        let (extract_type, view) = get_type(extract);
+        let result = match extract_type {
+            ExtractorTypes::JSON => json::extract(view, response),
+            ExtractorTypes::HEADER => headers::extract(view, response),
+            _ => Err(anyhow!("Unknown extractor type")),
+        };
 
-        println!("{:?} [{}]", extract_type, view);
+        match result {
+            Ok(value) => {
+                map.insert(prop.clone(), value);
+            }
+            Err(e) => {
+                println!("Failed to extract {} from response: {}", view, e);
+            }
+        };
     }
 
-    Err(anyhow!("NYI"))
+    Ok(map)
 }
 
 #[cfg(test)]
