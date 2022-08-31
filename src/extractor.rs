@@ -1,6 +1,6 @@
-use crate::{request::StringMap, response::Response};
 use anyhow::{anyhow, Result};
-use serde_json::Value;
+use crate::response::Response;
+use crate::common::StringMap;
 
 #[derive(Debug)]
 enum ExtractorTypes {
@@ -47,7 +47,14 @@ mod headers {
 
     pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
         println!("Header Parsing [{}]", extract_string);
-        Err(anyhow!("NYI"))
+
+        for (header, value) in response.headers() {
+            if header == extract_string {
+                return Ok(value.to_string());
+            }
+        }
+
+        Err(anyhow!("Could not find header in map"))
     }
 }
 
