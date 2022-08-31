@@ -1,4 +1,5 @@
-use crate::{request::StringMap, response};
+use crate::common::StringMap;
+use crate::response;
 
 use anyhow::Result;
 
@@ -10,6 +11,7 @@ use hyper::Client;
   errors or the response.
 */
 mod request_converter {
+    use crate::common::StringMap;
     use crate::request;
     use anyhow::{Context, Result};
     use hyper::{Body, Request};
@@ -22,10 +24,7 @@ mod request_converter {
         }
     }
 
-    pub fn convert(
-        req: &request::Request,
-        cached_properties: &request::StringMap,
-    ) -> Result<Request<Body>> {
+    pub fn convert(req: &request::Request, cached_properties: &StringMap) -> Result<Request<Body>> {
         Request::builder()
             .method(convert_verb(req.verb()))
             .uri(req.replaced_uri(cached_properties))

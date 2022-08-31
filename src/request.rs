@@ -1,8 +1,7 @@
+use crate::common::StringMap;
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::Deserialize;
-
-pub type StringMap = std::collections::HashMap<String, String>;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(r"\{{1,2}(\w*)\}{1,2}")

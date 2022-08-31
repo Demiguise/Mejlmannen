@@ -1,10 +1,12 @@
 mod client;
+mod common;
 mod extractor;
 mod request;
 mod response;
 
 use anyhow::{Context, Result};
-use request::{Request, StringMap};
+use common::StringMap;
+use request::Request;
 use serde::Deserialize;
 use std::collections::HashMap;
 use std::fs;
