@@ -277,4 +277,15 @@ mod test {
             Some(&"{some_key}".to_owned())
         );
     }
+
+    #[test]
+    fn basic_serialisation() {
+        let data = r#"{
+            "uri": "http://some.website.com",
+            "verb": "GET"
+        }"#;
+
+        let value = serde_json::from_str::<Request>(&data);
+        assert!(value.is_ok(), "Failed to parse basic string: {}", value.unwrap_err());
+    }
 }
