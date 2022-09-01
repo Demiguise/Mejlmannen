@@ -1,7 +1,9 @@
 use crate::common::StringMap;
 use lazy_static::lazy_static;
 use regex::Regex;
-use serde::Deserialize;
+use serde::{Deserialize, Deserializer};
+use std::fs;
+use std::path::PathBuf;
 
 lazy_static! {
     static ref RE: Regex = Regex::new(r"\{{1,2}(\w*)\}{1,2}")
@@ -27,7 +29,7 @@ pub struct Request {
     properties: StringMap,
     #[serde(default)]
     headers: StringMap,
-    #[serde(default)]
+    #[serde(default, deserialize_with = "from_string")]
     body: Vec<u8>,
     #[serde(default)]
     extract: StringMap,
@@ -94,8 +96,31 @@ impl Request {
     }
 }
 
+fn from_string<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
+where
+    D: Deserializer<'de>,
+{
+    let s: &str = Deserialize::deserialize(deserializer)?;
+    if s.starts_with("file:") {
+        // Load file
+        let path = PathBuf::from(&s[5..]);
+        let data = fs::read_to_string(&path);
+        return match data {
+            Ok(val) => Ok(val.into_bytes()),
+            Err(e) => {
+                // I literally cannot figure out how to pass an error upwards here
+                panic!("Unable to load {} as a file", path.display());
+            }
+        };
+    }
+
+    Ok(s.as_bytes().to_vec())
+}
+
 #[cfg(test)]
 mod test {
+
+    use std::fs;
 
     use super::{Request, StringMap, Verb};
 
@@ -286,6 +311,45 @@ mod test {
         }"#;
 
         let value = serde_json::from_str::<Request>(&data);
-        assert!(value.is_ok(), "Failed to parse basic string: {}", value.unwrap_err());
+        assert!(
+            value.is_ok(),
+            "Failed to parse basic string: {}",
+            value.unwrap_err()
+        );
+    }
+
+    #[test]
+    fn body_serialisation() {
+        let data = r#"{
+            "uri": "http://some.website.com",
+            "verb": "GET",
+            "body": "hello"
+        }"#;
+
+        let value = serde_json::from_str::<Request>(&data);
+        assert!(
+            value.is_ok(),
+            "Failed to parse body string: {}",
+            value.unwrap_err()
+        );
+        assert_eq!(value.unwrap().body, "hello".as_bytes().to_vec());
+    }
+
+    #[test]
+    fn body_file_serialisation() {
+        fs::write("target/tmp/hello.txt", "hello").expect("Failed to write test file");
+        let data = r#"{
+            "uri": "http://some.website.com",
+            "verb": "GET",
+            "body": "file:target/tmp/hello.txt"
+        }"#;
+
+        let value = serde_json::from_str::<Request>(&data);
+        assert!(
+            value.is_ok(),
+            "Failed to parse body string: {}",
+            value.unwrap_err()
+        );
+        assert_eq!(value.unwrap().body, "hello".as_bytes().to_vec());
     }
 }
