@@ -4,12 +4,14 @@
     {
       "uri": "http://httpbin.org/{endpoint}",
       "properties": {
-        "endpoint": "ip"
+        "endpoint": "json"
       },
       "verb": "GET",
       "extract": {
-        "extracted_param" : "json:origin",
-        "AUTH_VALUE" : "header:AUTHENTICATION_BEARER"
+        "author" : "json:slideshow.author",
+        "first_title" : "json:slideshow.slides[0].title",
+        "second_title" : "json:slideshow.slides[1].title",
+        "second_items" : "json:slideshow.slides[1].items"
       }
     },
     {
