@@ -19,10 +19,11 @@
       "properties": {
         "endpoint": "ip"
       },
+      "body": "file:get_ip_body.json",
       "headers": {
         "AUTHENTICATION": "{AUTH_VALUE}"
       },
-      "verb": "GET"
+      "verb": "POST"
     }
   ]
 }
