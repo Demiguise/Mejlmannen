@@ -26,8 +26,8 @@ mod json {
     use serde_json::Value;
 
     lazy_static! {
-        static ref RE: Regex =
-            Regex::new(r"([A-Za-z]+)\[(\d+)\]").expect("Failed to create regex for JSON index parsing");
+        static ref RE: Regex = Regex::new(r"([A-Za-z]+)\[(\d+)\]")
+            .expect("Failed to create regex for JSON index parsing");
     }
 
     pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
@@ -88,7 +88,11 @@ mod json {
             }
         }
 
-        Ok(v.to_string())
+        if v.is_string() {
+            Ok(v.as_str().unwrap().to_owned())
+        } else {
+            Ok(v.to_string())
+        }
     }
 
     #[cfg(test)]
@@ -115,7 +119,7 @@ mod json {
             let to_extract = "name";
             let value = super::extract(to_extract, &response);
             assert!(value.is_ok(), "Extracting failed: {:?}", value.unwrap_err());
-            assert_eq!(value.unwrap(), "\"John Doe\"");
+            assert_eq!(value.unwrap(), "John Doe");
         }
 
         #[test]
@@ -137,7 +141,7 @@ mod json {
             let to_extract = "phones[1]";
             let value = super::extract(to_extract, &response);
             assert!(value.is_ok(), "Extracting failed: {:?}", value.unwrap_err());
-            assert_eq!(value.unwrap(), "\"+44 2345678\"");
+            assert_eq!(value.unwrap(), "+44 2345678");
         }
 
         fn get_deep_object() -> &'static str {
