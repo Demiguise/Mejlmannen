@@ -20,8 +20,15 @@ fn get_type(extract: &String) -> (ExtractorTypes, &str) {
 
 mod json {
     use crate::response::Response;
-    use anyhow::{anyhow, Result};
+    use anyhow::{anyhow, Context, Result};
+    use lazy_static::lazy_static;
+    use regex::Regex;
     use serde_json::Value;
+
+    lazy_static! {
+        static ref RE: Regex =
+            Regex::new(r"([A-Za-z]+)\[(\d+)\]").expect("Failed to create regex for JSON index parsing");
+    }
 
     pub fn extract(extract_string: &str, response: &Response) -> Result<String> {
         println!("JSON Parsing [{}]", extract_string);
@@ -29,7 +36,34 @@ mod json {
 
         let mut v: Value = serde_json::from_str(&body.as_str())?;
 
-        for token in extract_string.split('.') {
+        for original_token in extract_string.split('.') {
+            let mut index: Option<usize> = None;
+            /*
+                Would be nice to not convert this to an owned string, but I can't
+                figure out a way of letting the compiler know that the string WILL
+                outlive the "Borrow" from the RE.captures.
+            */
+            let token = match RE.captures(&original_token) {
+                Some(captures) => {
+                    // Parse the second capture, the number, into a usize for later
+                    match &captures[2].parse::<usize>() {
+                        Ok(val) => {
+                            index = Some(*val);
+                        }
+                        Err(e) => {
+                            return Err(anyhow!(
+                                "Failed to parse [{}] as a usize: {}",
+                                &captures[1],
+                                e
+                            ))
+                        }
+                    };
+
+                    // Make the first capture group, the identifier, into a String
+                    captures[1].to_owned()
+                }
+                None => original_token.to_owned(),
+            };
             match v.get(token) {
                 Some(value) => {
                     // TODO: Anyway to _not_ clone this value?
@@ -38,11 +72,20 @@ mod json {
                 None => {
                     return Err(anyhow!(
                         "Couldn't find [{}] in the response body. Full Query [{}]",
-                        token,
+                        original_token,
                         extract_string
                     ))
                 }
             };
+
+            if index.is_some() {
+                v = v
+                    .as_array()
+                    .with_context(|| format!("Failed to parse {} as an array", original_token))?
+                    .get(index.unwrap())
+                    .expect("Failed to get index")
+                    .clone();
+            }
         }
 
         Ok(v.to_string())
@@ -96,7 +139,6 @@ mod json {
             assert!(value.is_ok(), "Extracting failed: {:?}", value.unwrap_err());
             assert_eq!(value.unwrap(), "\"+44 2345678\"");
         }
-
 
         fn get_deep_object() -> &'static str {
             r#"
