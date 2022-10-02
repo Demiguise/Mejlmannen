@@ -48,6 +48,14 @@ async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
     println!("Got response [{:?}]", body);
 }
 
+// Run through the collection and make load any files needed by the requests
+fn evaluate_collection(collection: &mut Collection, working_directory: &PathBuf) -> Result<()> {
+    for req in collection.requests.iter_mut() {
+        req.update_body(working_directory);
+    }
+    Ok(())
+}
+
 fn load_directory(
     root_dir: &PathBuf,
     current_dir: &PathBuf,
@@ -81,9 +89,14 @@ fn load_directory(
         let data = fs::read_to_string(&path)
             .with_context(|| format!("Failed to read data from {}", path.display()))?;
         match serde_json::from_str(&data) {
-            Ok(json) => {
-                map.insert(test_path, json);
-            }
+            Ok(mut json) => match evaluate_collection(&mut json, current_dir) {
+                Ok(_) => {
+                    map.insert(test_path, json);
+                }
+                Err(e) => {
+                    println!("Failed to evaluate Collction {} [{}]", json.name, e);
+                }
+            },
             Err(e) => {
                 println!("Failed to parse JSON from {} [{}]", path.display(), e);
             }

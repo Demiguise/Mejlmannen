@@ -1,4 +1,5 @@
 use crate::common::StringMap;
+use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
 use serde::{Deserialize, Deserializer};
@@ -93,6 +94,22 @@ impl Request {
             map.insert(key.clone(), self.replace_text(&value, cached_properties));
         });
         map
+    }
+
+    // I don't like this but I'm not sure there's much other way
+    pub fn update_body(&mut self, working_directory: &PathBuf) -> Result<()> {
+        if self.body.starts_with("file:") {
+            // Load the file that we need and replace the body with it
+            let file_path = self.body.strip_prefix("file:").unwrap();
+            let file_path = working_directory.join(file_path);
+
+            let data = fs::read_to_string(&file_path)
+                .with_context(|| format!("Failed to load {}", file_path.display()))?;
+
+            self.body = data;
+        }
+
+        Ok(())
     }
 }
 
@@ -315,19 +332,16 @@ mod test {
 
     #[test]
     fn body_file_serialisation() {
-        fs::write("target/tmp/hello.txt", "hello").expect("Failed to write test file");
+        let tmp_dir = PathBuf::from("target/tmp");
+        fs::write(tmp_dir.join("hello.txt"), "hello").expect("Failed to write test file");
         let data = r#"{
             "uri": "http://some.website.com",
             "verb": "GET",
-            "body": "file:target/tmp/hello.txt"
+            "body": "file:hello.txt"
         }"#;
 
-        let value = serde_json::from_str::<Request>(&data);
-        assert!(
-            value.is_ok(),
-            "Failed to parse body string: {}",
-            value.unwrap_err()
-        );
-        assert_eq!(value.unwrap().body, "hello".as_bytes().to_vec());
+        let mut value = serde_json::from_str::<Request>(&data).unwrap();
+        assert!(value.update_body(&tmp_dir).is_ok());
+        assert_eq!(value.body(), "hello".as_bytes().to_vec());
     }
 }
