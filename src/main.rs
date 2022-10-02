@@ -51,7 +51,12 @@ async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
 // Run through the collection and make load any files needed by the requests
 fn evaluate_collection(collection: &mut Collection, working_directory: &PathBuf) -> Result<()> {
     for req in collection.requests.iter_mut() {
-        req.update_body(working_directory);
+        match req.update_body(working_directory) {
+            Ok(_) => {}
+            Err(e) => {
+                println!("Failed to update body for {} [{}]", req.uri(), e);
+            }
+        }
     }
     Ok(())
 }
@@ -62,13 +67,20 @@ fn load_directory(
     map: &mut CollectionMap,
 ) -> Result<()> {
     let contents = current_dir.read_dir()?;
-    for item in contents {
-        let path = item
-            .with_context(|| format!("Failed to read file in {}", current_dir.display()))?
-            .path();
+    for content in contents {
+        let item = content
+            .with_context(|| format!("Failed to read file in {}", current_dir.display(),))?;
+
+        let path = item.path();
+        let name = item.file_name().into_string().unwrap(); // TODO: Error handling here
 
         if path.is_dir() {
-            // Recurse down that file path
+            if name.starts_with("_") {
+                continue;
+            }
+
+            // Directories with `_` are ignored as they probably contain data and such.
+            // If not, then recurse down that file path
             load_directory(root_dir, &path, map)?;
             continue;
         }
