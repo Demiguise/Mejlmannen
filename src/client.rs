@@ -25,11 +25,17 @@ mod request_converter {
     }
 
     pub fn convert(req: &request::Request, cached_properties: &StringMap) -> Result<Request<Body>> {
-        Request::builder()
+        let mut builder = Request::builder()
             .method(convert_verb(req.verb()))
-            .uri(req.replaced_uri(cached_properties))
+            .uri(req.replaced_uri(cached_properties));
+
+        for (key, value) in req.replaced_headers(cached_properties).iter() {
+            builder = builder.header(key, value);
+        }
+
+        return builder
             .body(Body::from(req.body().clone()))
-            .with_context(|| "Failed?") // TODO: Better message
+            .with_context(|| "Failed?"); // TODO: Better message
     }
 }
 
