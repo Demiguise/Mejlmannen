@@ -197,6 +197,26 @@ mod headers {
 
         Err(anyhow!("Could not find header in map"))
     }
+
+    #[cfg(test)]
+    mod test {
+        use crate::response::ResponseBuilder;
+        use std::collections::HashMap;
+
+        #[test]
+        fn basic() {
+            let to_extract = "AUTHENTICATION";
+            let expected = "SOME_TOKEN";
+            let mut header_map = HashMap::new();
+            header_map.insert(to_extract.to_owned(), expected.to_owned());
+            header_map.insert("Authentication".to_owned(), "SOME_TOKEN".to_owned());
+            let response = ResponseBuilder::new().headers(header_map).build();
+            let value = super::extract(to_extract, &response);
+
+            assert!(value.is_ok(), "Extracted failed: {:?}", value.unwrap_err());
+            assert_eq!(value.unwrap(), expected);
+        }
+    }
 }
 
 pub fn extract(to_extract: &StringMap, response: &Response) -> Result<StringMap> {
@@ -223,6 +243,3 @@ pub fn extract(to_extract: &StringMap, response: &Response) -> Result<StringMap>
 
     Ok(map)
 }
-
-#[cfg(test)]
-mod test {}
