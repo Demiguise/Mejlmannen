@@ -29,8 +29,8 @@ pub struct Request {
     properties: StringMap,
     #[serde(default)]
     headers: StringMap,
-    #[serde(default, deserialize_with = "from_string")]
-    body: Vec<u8>,
+    #[serde(default)]
+    body: String,
     #[serde(default)]
     extract: StringMap,
 }
@@ -42,8 +42,8 @@ impl Request {
     pub fn headers(&self) -> &StringMap {
         &self.headers
     }
-    pub fn body(&self) -> &Vec<u8> {
-        &self.body
+    pub fn body(&self) -> Vec<u8> {
+        self.body.as_bytes().to_vec()
     }
     pub fn verb(&self) -> Verb {
         self.verb
@@ -96,31 +96,9 @@ impl Request {
     }
 }
 
-fn from_string<'de, D>(deserializer: D) -> Result<Vec<u8>, D::Error>
-where
-    D: Deserializer<'de>,
-{
-    let s: &str = Deserialize::deserialize(deserializer)?;
-    if s.starts_with("file:") {
-        // Load file
-        let path = PathBuf::from(&s[5..]);
-        let data = fs::read_to_string(&path);
-        return match data {
-            Ok(val) => Ok(val.into_bytes()),
-            Err(e) => {
-                // I literally cannot figure out how to pass an error upwards here
-                panic!("Unable to load {} as a file", path.display());
-            }
-        };
-    }
-
-    Ok(s.as_bytes().to_vec())
-}
-
 #[cfg(test)]
 mod test {
-
-    use std::fs;
+    use std::{fs, path::PathBuf};
 
     use super::{Request, StringMap, Verb};
 
@@ -128,7 +106,7 @@ mod test {
         uri: String,
         properties: StringMap,
         headers: StringMap,
-        body: Vec<u8>,
+        body: String,
         verb: Verb,
         extract: StringMap,
     }
@@ -139,7 +117,7 @@ mod test {
                 uri: String::new(),
                 properties: StringMap::new(),
                 headers: StringMap::new(),
-                body: Vec::new(),
+                body: String::new(),
                 verb: Verb::GET,
                 extract: StringMap::new(),
             }
@@ -165,7 +143,7 @@ mod test {
             self
         }
 
-        pub fn body(mut self, body: Vec<u8>) -> RequestBuilder {
+        pub fn body(mut self, body: String) -> RequestBuilder {
             self.body = body;
             self
         }
@@ -332,7 +310,7 @@ mod test {
             "Failed to parse body string: {}",
             value.unwrap_err()
         );
-        assert_eq!(value.unwrap().body, "hello".as_bytes().to_vec());
+        assert_eq!(value.unwrap().body(), "hello".as_bytes().to_vec());
     }
 
     #[test]
