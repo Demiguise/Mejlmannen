@@ -15,15 +15,16 @@
       }
     },
     {
-      "uri": "http://httpbin.org/{extracted_param}",
-      "properties": {
-        "endpoint": "ip"
-      },
-      "body": "file:get_ip_body.json",
-      "headers": {
-        "AUTHENTICATION": "{AUTH_VALUE}"
-      },
-      "verb": "POST"
+      "uri": "http://httpbin.org/uuid",
+      "verb": "GET",
+      "extract": {
+        "id" : "json:uuid"
+      }
+    },
+    {
+      "uri": "http://httpbin.org/anything",
+      "verb": "POST",
+      "body": "file:_data/post-anything.json"
     }
   ]
 }
