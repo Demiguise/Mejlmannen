@@ -34,7 +34,7 @@ mod request_converter {
         }
 
         return builder
-            .body(Body::from(req.body().clone()))
+            .body(Body::from(req.replaced_body(cached_properties).clone()))
             .with_context(|| "Failed?"); // TODO: Better message
     }
 }

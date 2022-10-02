@@ -96,6 +96,11 @@ impl Request {
         map
     }
 
+    pub fn replaced_body(&self, cached_properties: &StringMap) -> Vec<u8> {
+        let replaced = self.replace_text(&self.body, cached_properties);
+        replaced.into_bytes()
+    }
+
     // I don't like this but I'm not sure there's much other way
     pub fn update_body(&mut self, working_directory: &PathBuf) -> Result<()> {
         if self.body.starts_with("file:") {
