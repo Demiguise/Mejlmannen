@@ -9,8 +9,9 @@ Rust replacement for Postman.
 - Replacing Headers,URIs, and body data with properties.
 - Extracting JSON and headers from responses.
 - Loading of files for use in request bodies.
+- Allow for binary data to be loaded from disk and used in requests.
+  - I think.
 
 ## TODO
 
-- Allow for binary data to be loaded from disk and used in requests.
 - CLI/TUI.
