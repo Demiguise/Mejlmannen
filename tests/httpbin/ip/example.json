@@ -25,6 +25,12 @@
       "uri": "http://httpbin.org/anything",
       "verb": "POST",
       "body": "file:_data/post-anything.json"
+    },
+    {
+      "uri": "http://httpbin.org/anything",
+      "verb": "POST",
+      "content_type": "Binary",
+      "body": "file:_data/post-binary.bin"
     }
   ]
 }
