@@ -372,4 +372,20 @@ mod test {
         assert!(value.update_body(&tmp_dir).is_ok());
         assert_eq!(value.body(), "hello".as_bytes().to_vec());
     }
+
+    #[test]
+    fn body_binary_file_serialisation() {
+        let tmp_dir = PathBuf::from("target/tmp");
+        fs::write(tmp_dir.join("hello.bin"), "hello".as_bytes()).expect("Failed to write test file");
+        let data = r#"{
+            "uri": "http://some.website.com",
+            "verb": "GET",
+            "content_type": "Binary",
+            "body": "file:hello.bin"
+        }"#;
+
+        let mut value = serde_json::from_str::<Request>(&data).unwrap();
+        assert!(value.update_body(&tmp_dir).is_ok());
+        assert_eq!(value.body(), "hello".as_bytes().to_vec());
+    }
 }
