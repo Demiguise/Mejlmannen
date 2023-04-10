@@ -2,6 +2,7 @@ use crate::common::StringMap;
 use anyhow::{Context, Result};
 use lazy_static::lazy_static;
 use regex::Regex;
+use serde::__private::de::Content;
 use serde::{Deserialize, Deserializer};
 use std::fs;
 use std::path::PathBuf;
@@ -19,6 +20,17 @@ pub enum Verb {
     DELETE,
 }
 
+#[derive(Debug, Clone, Copy, Deserialize)]
+pub enum ContentType {
+    String,
+    Binary,
+}
+impl ContentType {
+    pub fn default() -> Self {
+        ContentType::String
+    }
+}
+
 #[derive(Debug, Deserialize)]
 pub struct Request {
     // Require properties
@@ -34,6 +46,8 @@ pub struct Request {
     body: String,
     #[serde(default)]
     extract: StringMap,
+    #[serde(default = "ContentType::default")]
+    content_type: ContentType,
 }
 
 impl Request {
@@ -51,6 +65,9 @@ impl Request {
     }
     pub fn extract(&self) -> &StringMap {
         &self.extract
+    }
+    pub fn content_type(&self) -> ContentType {
+        self.content_type
     }
 
     /*
@@ -97,8 +114,13 @@ impl Request {
     }
 
     pub fn replaced_body(&self, cached_properties: &StringMap) -> Vec<u8> {
-        let replaced = self.replace_text(&self.body, cached_properties);
-        replaced.into_bytes()
+        match self.content_type {
+            ContentType::String => {
+                let replaced = self.replace_text(&self.body, cached_properties);
+                replaced.into_bytes()
+            }
+            ContentType::Binary => self.body.clone().into_bytes(),
+        }
     }
 
     // I don't like this but I'm not sure there's much other way
@@ -122,7 +144,7 @@ impl Request {
 mod test {
     use std::{fs, path::PathBuf};
 
-    use super::{Request, StringMap, Verb};
+    use super::{ContentType, Request, StringMap, Verb};
 
     struct RequestBuilder {
         uri: String,
@@ -188,6 +210,7 @@ mod test {
                 body: self.body,
                 verb: self.verb,
                 extract: self.extract,
+                content_type: ContentType::String
             }
         }
     }
