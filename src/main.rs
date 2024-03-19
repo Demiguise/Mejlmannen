@@ -9,6 +9,7 @@ use clap::Parser;
 use common::StringMap;
 use request::Request;
 use serde::Deserialize;
+use serde_json::to_string_pretty;
 use std::env;
 use std::collections::HashMap;
 use std::fs;
@@ -22,18 +23,20 @@ struct Collection {
 
 type CollectionMap = HashMap<PathBuf, Collection>;
 
-async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
+async fn execute_request(request: &Request, cached_properties: &mut StringMap, idx: usize) {
+    println!("---");
+    println!("Executing [{}]", idx);
+
     let resp = client::execute(request, &cached_properties).await;
     if resp.is_err() {
         panic!("Failed to make request: {}", resp.err().unwrap());
     }
 
-    let resp = resp.unwrap();
+    // Request got through and we have some kind of response
+    println!(">>>");
 
-    if resp.status() != 200 {
-        println!("Request failed with code {}", resp.status());
-        return;
-    }
+    let resp = resp.unwrap();
+    println!("Code: {}", resp.status());
 
     match extractor::extract(request.extract(), &resp) {
         Ok(props) => {
@@ -45,9 +48,19 @@ async fn execute_request(request: &Request, cached_properties: &mut StringMap) {
         }
     }
 
-    let body = String::from_utf8(resp.body().clone());
-
-    println!("Got response [{:?}]", body);
+    // If we have a body, display it for the user in a "Nice" fashion if possible
+    let body = resp.body().clone();
+    if !body.is_empty() {
+        let str_body = String::from_utf8(body);
+        match str_body {
+            Ok(s) => {
+                println!("Body:\n{}", s);
+            }
+            Err(e) => {
+                println!("{:02X?}", e.into_bytes());
+            }
+        }
+    }
 }
 
 // Run through the collection and make load any files needed by the requests
@@ -140,8 +153,8 @@ async fn main() {
     let mut cached_properties = StringMap::new();
     for (path, collection) in collections.iter() {
         println!("Running tests for {}/{}", path.display(), collection.name);
-        for req in collection.requests.iter() {
-            execute_request(req, &mut cached_properties).await;
+        for (idx, req) in collection.requests.iter().enumerate() {
+            execute_request(req, &mut cached_properties, idx).await;
         }
     }
 }
