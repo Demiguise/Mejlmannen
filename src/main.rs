@@ -106,7 +106,7 @@ fn load_directory(
                     map.insert(test_path, json);
                 }
                 Err(e) => {
-                    println!("Failed to evaluate Collction {} [{}]", json.name, e);
+                    println!("Failed to evaluate Collection {} [{}]", json.name, e);
                 }
             },
             Err(e) => {
