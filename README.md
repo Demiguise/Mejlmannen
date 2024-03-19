@@ -14,7 +14,10 @@ Rust replacement for Postman.
 
 ## TODO
 
+- Better logging/verbosity for CLI.
+- Possibly handle conditional execution of requests in the sequence.
 - CLI/TUI.
+- GUI.
 
 ## Usage
 
