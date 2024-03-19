@@ -5,9 +5,11 @@ mod request;
 mod response;
 
 use anyhow::{Context, Result};
+use clap::Parser;
 use common::StringMap;
 use request::Request;
 use serde::Deserialize;
+use std::env;
 use std::collections::HashMap;
 use std::fs;
 use std::path::PathBuf;
@@ -118,12 +120,21 @@ fn load_directory(
     Ok(())
 }
 
+#[derive(Parser)]
+struct Args {
+    collection: std::path::PathBuf,
+}
+
 #[tokio::main]
 async fn main() {
-    let test_dir = PathBuf::from(env!("CARGO_MANIFEST_DIR")).join("tests");
+    let args = Args::parse();
+
+    let collection_dir = env::current_dir().unwrap().join(args.collection);
+    println!("Running collection: [{:?}]", collection_dir);
+
     let mut collections = HashMap::new();
 
-    load_directory(&test_dir, &test_dir, &mut collections)
+    load_directory(&collection_dir, &collection_dir, &mut collections)
         .expect("Failed to load paths from directory");
 
     let mut cached_properties = StringMap::new();
