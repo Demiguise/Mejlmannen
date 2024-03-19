@@ -15,3 +15,17 @@ Rust replacement for Postman.
 ## TODO
 
 - CLI/TUI.
+
+## Usage
+
+So far the usage is:
+
+```cli
+mejlman <collection_directory>
+```
+
+For testing, you can try:
+
+```cli
+mejlman <repo_root>\tests\httpbin\ip
+```
